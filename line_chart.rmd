@@ -1,0 +1,121 @@
+---
+title: "Plot_endpoints"
+author: "Eugenie Zhang"
+date: "2/15/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(haven)
+library(ggplot2)
+library(ggsci)
+library(gridExtra)
+
+
+
+```
+
+## Source data
+
+```{r}
+
+stroke = read_dta('')
+
+death = stroke %>% 
+        filter(death_1y == 1) %>% 
+        mutate(death_year = substr(death_date_new, 1, 4) ) %>% 
+        select( disease, proc_year, death_year, death_1y)
+
+mi = stroke %>% 
+        filter(mi_1y == 1) %>% 
+        mutate(mi_year = substr(mi_date_new, 1, 4) ) %>% 
+        select(disease, proc_year, mi_year, mi_1y)
+
+cva = stroke %>% 
+        filter(cva_1y == 1) %>% 
+        mutate(cva_year = substr(cva_date_new, 1, 4) ) %>% 
+        select(disease, proc_year, cva_year, cva_1y)
+
+bleed = stroke %>% 
+        filter(bleed_1y == 1) %>% 
+        mutate(bleed_year = substr(bleed_date_new, 1, 4) ) %>% 
+        select(disease, proc_year, bleed_year, bleed_1y)
+
+```
+
+```{r}
+# plot data frame
+death_df = death %>% count(proc_year) %>% mutate(parameter = "Death")
+mi_df = mi %>% count(proc_year) %>% mutate(parameter = "Myocardial infarction")
+cva_df = cva %>% count(proc_year) %>% mutate(parameter = "Stroke")
+bleed_df = bleed %>% count(proc_year) %>% mutate(parameter = "All bleeding")
+
+summary = rbind(death_df, mi_df, cva_df, bleed_df)
+
+```
+
+
+
+
+## Line plot
+
+```{r}
+
+p1 = ggplot(data = death_df, aes(x = proc_year, y=n)) +
+   geom_line() +
+   geom_point() +
+   theme_bw() +
+   ggtitle("Death Events 2012 to 2019") +
+   labs(x="Year of procudure",y="Number of events") +
+   ylim(0,200) +
+   scale_x_continuous(breaks=c(2012:2019), labels=c(2012:2019),limits=c(2012,2020))   
+   # +geom_text(aes(label=n),position=position_dodge(width=0.9),vjust=-0.35)
+  
+p2 = ggplot(data = mi_df, aes(x = proc_year, y=n, label=n )) +
+   geom_line() +
+   geom_point() +
+   theme_bw() +
+   ggtitle("MI Events 2012 to 2019") +
+   labs(x="Year of procudure",y="Number of events") +
+   ylim(0,200) +
+   scale_x_continuous(breaks=c(2012:2019), labels=c(2012:2019),limits=c(2012,2020)) 
+   
+
+p3 = ggplot(data = cva_df, aes(x = proc_year, y=n, label=n )) +
+   geom_line() +
+   geom_point() +
+   theme_bw() +
+   ggtitle("Stroke Events 2012 to 2019") +
+   labs(x="Year of procudure",y="Number of events") +
+   ylim(0,200) +
+   scale_x_continuous(breaks=c(2012:2019), labels=c(2012:2019),limits=c(2012,2020)) 
+   
+
+p4 = ggplot(data = bleed_df, aes(x = proc_year, y=n, label=n )) +
+   geom_line() +
+   geom_point() +
+   theme_bw() +
+   ggtitle("All bleeding Events 2012 to 2019") +
+   labs(x="Year of procudure",y="Number of events") +
+   ylim(0,200) +
+   scale_x_continuous(breaks=c(2012:2019), labels=c(2012:2019),limits=c(2012,2020))
+   
+
+   grid.arrange(p1, p2, p3, p4, ncol = 2)
+  
+```
+
+```{r}
+ggplot(data = summary, aes(x = proc_year, y=n, color=parameter, label=n)) +
+   geom_line() +
+   geom_point() +
+   ggtitle("Adverse Events at 1 Year After Index Procedure 2012 to 2019") +
+   labs(x="Year of procudure",y="Number of events") +
+   ylim(0,200) +
+   scale_x_continuous(breaks=c(2012:2020), labels=c(2012:2020),limits=c(2012,2020)) +
+   scale_color_jama() + theme_bw()
+   
+```
